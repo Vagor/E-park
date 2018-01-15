@@ -14,19 +14,19 @@ function UserDataModel(rfid, latitude, longitude, name, gender, carNumber, openi
 }
 
 // 伪造数据 用户1
-var user1 = new UserDataModel("asd12fa", 123.9123, 23.9123, '沈丹凤', 'Female', '沪BSH366', 'o1qIl0d430JuNJ0fmONW3xOHgfB4', false)
+var user1 = new UserDataModel("A560691B", 123.9123, 23.9123, '沈丹凤', 'Female', '沪BSH366', 'o1qIl0d430JuNJ0fmONW3xOHgfB4', false)
 
 // 伪造数据 用户2
-var user2 = new UserDataModel("asd22fa", 223.9223, 23.9223, '朱超', 'Female', '沪U12366', false)
+var user2 = new UserDataModel("asd22fa", 223.9223, 23.9223, '朱超', 'Female', '沪U12366', 'o1qIl0d430JuNJ0fmONW3xOHgfB4',false)
 
 // 伪造数据 用户3
-var user3 = new UserDataModel("asd312fa", 323.9323, 23.9323, '吕秀萍', 'Female', '沪L14306', false)
+var user3 = new UserDataModel("asd312fa", 323.9323, 23.9323, '吕秀萍', 'Female', '沪L14306', 'o1qIl0d430JuNJ0fmONW3xOHgfB4',false)
 
 // 伪造数据 用户4
-var user4 = new UserDataModel("asd42f3a", 423.9423, 23.9423, '范佳敏', 'Female', '沪G54876', false)
+var user4 = new UserDataModel("asd42f3a", 423.9423, 23.9423, '范佳敏', 'Female', '沪G54876', 'o1qIl0d430JuNJ0fmONW3xOHgfB4',false)
 
 // 伪造数据 用户5
-var user5 = new UserDataModel("asd52f5a", 523.9523, 23.9523, '朱正国', 'Male', '沪AH3636', false)
+var user5 = new UserDataModel("asd52f5a", 523.9523, 23.9523, '朱正国', 'Male', '沪AH3636', 'o1qIl0d430JuNJ0fmONW3xOHgfB4',false)
 
 // 创建TCP server
 require('net').createServer(function(socket) {
@@ -34,6 +34,8 @@ require('net').createServer(function(socket) {
   socket.on('data', function(data) {
     // 硬件传过来的data只有rfid卡号
     var tempRFID = data.toString()
+    console.log(tempRFID);
+
     switch (tempRFID) {
       case user1.rfid:
         user1.parkFlag = !user1.parkFlag;
@@ -54,15 +56,15 @@ require('net').createServer(function(socket) {
 
     }
   });
-  socket.on('connect', function(data) {
+  socket.on('connection', function(data) {
     console.log("there's a new connection");
   });
   socket.on('end', function(data) {
     // connection closed
   });
   socket.write('Some string');
-}).listen(4001, function() {
-  console.log('TCP server listening on port 4001');
+}).listen(3000, function() {
+  console.log('TCP server listening on port 3000');
 });
 
 // HTTP服务器内容
@@ -97,6 +99,6 @@ app.get('/getData', function(req, res) {
       res.send(null)
   }
 });
-app.listen(3000, function() {
-  console.log('HTTP server listening on port 3000');
+app.listen(80, function() {
+  console.log('HTTP server listening on port 80');
 });
