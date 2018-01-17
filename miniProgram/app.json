@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/logs/logs",
+    "pages/outlook/outlook"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#cfc",
+    "navigationBarTitleText": "停车管理",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#ccc"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#3f3",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "image/个人1.png",
+        "selectedIconPath": "image/个人2.png"
+      },
+      {
+        "pagePath": "pages/logs/logs",
+        "text": "位置",
+        "iconPath": "image/地图1.png",
+        "selectedIconPath": "image/地图2.png"
+      },
+      {
+        "pagePath": "pages/outlook/outlook",
+        "text": "付款",
+        "iconPath": "image/付款1.png",
+        "selectedIconPath": "image/付款2.png"
+      }
+    
+    ]
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  }
+}

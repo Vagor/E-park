@@ -1,0 +1,9 @@
+<!--logs.wxml-->
+<view>
+<button class='anniu' bindtap="changeName"> 点击查询车位信息 </button>
+<view class='change'> 
+  {{"您的停车位在："+name}} 
+</view>
+<map class='ditu' longitude="121.409179" latitude="31.31352358" scale="14"  markers="{{markers}}" show-location style="width: 100%; height: 300px;"></map>
+</view>
+

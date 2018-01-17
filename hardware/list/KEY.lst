@@ -1,0 +1,175 @@
+C51 COMPILER V9.57.0.0   KEY                                                               01/09/2018 09:55:47 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\obj\KEY.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE 源码\KEY.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTE
+                    -ND PRINT(.\list\KEY.lst) TABS(2) OBJECT(.\obj\KEY.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          /**************************************
+   3          这是独立按键的功能函数
+   4          每个按键有不同的功能或者是同一个按键在不同界面下
+   5          有不同的功能
+   6          *****************************************/   
+   7          sbit IOKEY1 = P3^1; 
+   8          sbit IOKEY2 = P3^2;  
+   9          sbit IOKEY3 = P3^3; 
+  10          sbit IOKEY4 = P1^6; 
+  11          sbit IOKEY5 = P3^0; 
+  12          sbit IOKEY6 = P1^7;
+  13          
+  14          
+  15          void keyDelay_1ms(unsigned int i)  //按键消抖延时
+  16          {
+  17   1        uint x,j;
+  18   1        for(j=0;j<i;j++)
+  19   1        for(x=0;x<=20;x++);
+  20   1      }
+  21          /********************************************************************
+  22          * 名称 : 
+  23          * 功能 : 
+  24          * 输入 : 无
+  25          * 输出 : 无
+  26          ***********************************************************************/
+  27          uchar KeyScan() 
+  28          {
+  29   1        uint count = 0;
+  30   1        bit SHORTKEY = 0,LONGKEY = 0;
+  31   1      
+  32   1        if(!IOKEY1)  //如果检测到低电平，说明按键按下
+  33   1          {
+  34   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+  35   2            if(!IOKEY1)     //再次确认按键是否按下，没有按下则退出
+  36   2            {
+  37   3            while(!IOKEY1)//如果确认按下按键等待按键释放，没有释放则一直等待
+  38   3            {     
+  39   4              count++;
+  40   4              keyDelay_1ms(2); 
+  41   4              if(count >= (150*20*5)) //6S 按住超过6S就算是长按，短按抛弃
+  42   4              {
+  43   5                LONGKEY=1;
+  44   5                SHORTKEY=0;
+  45   5                ClrScreen12864();
+  46   5                Lcd12864_PutString(1,2,"请松开手");
+  47   5                break;    
+  48   5              }
+  49   4              else  //不够6S 算是短按
+  50   4              {
+  51   5                SHORTKEY=1;
+  52   5                LONGKEY=0;
+  53   5              }               
+  54   4            }
+C51 COMPILER V9.57.0.0   KEY                                                               01/09/2018 09:55:47 PAGE 2   
+
+  55   3            while(IOKEY1 == 0);//等待放手
+  56   3            if(LONGKEY==1)
+  57   3            {
+  58   4              memset(QBUFF,0,20);
+  59   4              while(!x24c02ISendByte(CARDNUMADDR,0));
+  60   4              while(!x24c02ISendStr(QBUFFADDR,QBUFF,8)); 
+  61   4              while(!x24c02ISendStr(240,&QBUFF[8],8));  
+  62   4              while(!x24c02ISendByte(FIRSTADDR,0));
+  63   4              Lcd12864_PutString(2,1,"恢复出厂成功");
+  64   4              Fdelay1ms(1500);
+  65   4              ClrScreen12864();
+  66   4              return KEY_NO;  
+  67   4            }
+  68   3            else if(SHORTKEY==1) return KEY_1;  
+  69   3            }
+  70   2        }
+  71   1        if(!IOKEY2)  //如果检测到低电平，说明按键按下
+  72   1          {
+  73   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+  74   2            if(!IOKEY2)     //再次确认按键是否按下，没有按下则退出
+  75   2            {
+  76   3            while(!IOKEY2);//如果确认按下按键等待按键释放，没有释放则一直等待
+  77   3            {
+  78   4              return KEY_2;         
+  79   4            }
+  80   3            }
+  81   2        }
+  82   1        if(!IOKEY3)  //如果检测到低电平，说明按键按下
+  83   1          {
+  84   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+  85   2            if(!IOKEY3)     //再次确认按键是否按下，没有按下则退出
+  86   2            {
+  87   3            while(!IOKEY3);//如果确认按下按键等待按键释放，没有释放则一直等待
+  88   3            {
+  89   4              return KEY_3;         
+  90   4            }
+  91   3            }
+  92   2        }
+  93   1        if(!IOKEY4)  //如果检测到低电平，说明按键按下
+  94   1          {
+  95   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+  96   2            if(!IOKEY4)     //再次确认按键是否按下，没有按下则退出
+  97   2            {
+  98   3            while(!IOKEY4);//如果确认按下按键等待按键释放，没有释放则一直等待
+  99   3            {
+ 100   4              return KEY_4;         
+ 101   4            }
+ 102   3            }
+ 103   2        }
+ 104   1        if(!IOKEY5)  //如果检测到低电平，说明按键按下
+ 105   1          {
+ 106   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+ 107   2            if(!IOKEY5)     //再次确认按键是否按下，没有按下则退出
+ 108   2            {
+ 109   3            while(!IOKEY5);//如果确认按下按键等待按键释放，没有释放则一直等待
+ 110   3            {
+ 111   4              return KEY_5;         
+ 112   4            }
+ 113   3            }
+ 114   2        }
+ 115   1        if(!IOKEY6)  //如果检测到低电平，说明按键按下
+ 116   1          {
+C51 COMPILER V9.57.0.0   KEY                                                               01/09/2018 09:55:47 PAGE 3   
+
+ 117   2          keyDelay_1ms(1); //延时去抖，一般10-20ms
+ 118   2            if(!IOKEY6)     //再次确认按键是否按下，没有按下则退出
+ 119   2            {
+ 120   3            while(!IOKEY6);//如果确认按下按键等待按键释放，没有释放则一直等待
+ 121   3            {
+ 122   4              return KEY_6;         
+ 123   4            }
+ 124   3            }
+ 125   2        }
+ 126   1      
+ 127   1        return KEY_NO;
+ 128   1      }
+ 129          /********************************************************************
+ 130          * 名称 : 
+ 131          * 功能 : 
+ 132          * 输入 : 无
+ 133          * 输出 : 无
+ 134          ***********************************************************************/
+ 135          uchar KeyPro(void)
+ 136          {
+ 137   1        switch(KeyScan())
+ 138   1        {
+ 139   2          case KEY_1:return KEY_A;break;//
+ 140   2          case KEY_2:return KEY_B;break;//
+ 141   2          case KEY_3:return KEY_C;break;//
+ 142   2          case KEY_4:return KEY_D;break;//
+ 143   2          case KEY_5:return KEY_SO;break;//
+ 144   2          case KEY_6:return KEY_MI;break;//
+ 145   2          default:return KEY_NO;break;
+ 146   2        }
+ 147   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    364    ----
+   CONSTANT SIZE    =     22    ----
+   XDATA SIZE       =   ----       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

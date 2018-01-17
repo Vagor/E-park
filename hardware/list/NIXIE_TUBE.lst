@@ -1,0 +1,56 @@
+C51 COMPILER V9.00   NIXIE_TUBE                                                            08/06/2015 10:45:58 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE NIXIE_TUBE
+OBJECT MODULE PLACED IN .\obj\NIXIE_TUBE.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeilC51\C51\BIN\C51.EXE 源码\NIXIE_TUBE.c BROWSE DEBUG OBJECTEXTEND PRINT(.\
+                    -list\NIXIE_TUBE.lst) OBJECT(.\obj\NIXIE_TUBE.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          #define NIXIE_DATAPORT   P0     //数码管对应的数据端口
+   4          #define NIXIE_DIGPORT    P2     //对应哪个数码管
+   5          
+   6          #define TABLE_TYPE   TABLE_YANG  //用户选择对应的数码管的阴阳极结构    
+   7          
+   8          #define TABLE_YANG   0   //共阳
+   9          #define TABLE_YIN    1   //共阴
+  10          
+  11          uchar code NixieTable_Yang[] = {0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90, 0x88,0x83,0xc6,0xa1,0x8
+             -6,0x8e};//共阳
+  12          uchar code NixieTable_Yin[] = {0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f, 0x77,0x7c,0x39,0x5e,0x79
+             -,0x71};//共阴
+  13          uchar code NixieDig_Table[] = {0,1,2,3,4,5,6,7};  //对应哪个数码管
+  14          
+  15          #if(TABLE_TYPE == TABLE_YANG)  //共阳
+  16                  #define NIXIE_TABLE  NixieTable_Yang    
+  17          #else
+                      #define NIXIE_TABLE  NixieTable_Yang    
+              #endif
+  20          
+  21          
+  22          void NixieTube_ShowNum(uchar tdata) //显示数字
+  23          {
+  24   1              NIXIE_DATAPORT = NIXIE_TABLE[tdata % 10];       
+  25   1      }
+  26          
+  27          void NixieTube_Dig(uchar tdata) //选中对应的数码管
+  28          {
+  29   1              NIXIE_DIGPORT = NixieDig_Table[tdata % 8];      
+  30   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     24    ----
+   CONSTANT SIZE    =     40    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

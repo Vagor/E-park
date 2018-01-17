@@ -1,0 +1,26 @@
+<!--index.wxml-->
+<view class="container">
+  <view class="userinfo">
+    <button wx:if="{{!hasUserInfo && canIUse}}" open-type="getUserInfo" bindgetuserinfo="getUserInfo"> 获取头像昵称 </button>
+    <block wx:else>
+      <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
+      <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+    </block>
+  </view>
+
+  <view class="usermotto">
+    <text class="user-motto">姓名：{{dataFromEsp.name}}</text>
+  </view>
+    <view>
+    <text class="user-motto">车牌：{{dataFromEsp.carNumber}}</text>
+  </view>
+  <view>
+      <text class="user-motto" wx:if="{{dataFromEsp.parkFlag == 'undefined'}}">停车情况：</text>
+    <text class="user-motto" wx:elif="{{dataFromEsp.parkFlag == false}}">停车情况：未停车</text>
+        <text class="user-motto" wx:elif="{{dataFromEsp.parkFlag == true}}">停车情况：已停车</text>
+
+    
+  </view>
+         
+     <button class="car" type="primary" bindtap="getUserData"> 点击查询用户信息</button>    
+</view>

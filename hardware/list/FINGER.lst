@@ -1,0 +1,584 @@
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE FINGER
+OBJECT MODULE PLACED IN .\obj\FINGER.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeildeC51\C51\BIN\C51.EXE Ô´Âë\FINGER.c LARGE BROWSE DEBUG OBJECTEXTEND PRIN
+                    -T(.\list\FINGER.lst) OBJECT(.\obj\FINGER.obj)
+
+line level    source
+
+   1          
+   2          
+   3          //Õâ¸öÎÄ¼þµÄº¯ÊýÊÇÖ¸ÎÆÊ¶±ðÄ£¿éµÄÇý¶¯º¯Êý
+   4          //ºÍµ¥Æ¬»ú½øÐÐ´®¿ÚÍ¨ÐÅ£¬¾ßÌåµÄ·½Ê½¾ÍÊÇÍ¨¹ý·¢ËÍ¶ÔÓ¦µÄÖ¸Áî¸øÖ¸ÎÆÄ£¿é
+   5          //Ö¸ÎÆÄ£¿éÊÕµ½´®¿Ú½ÓÊÕµÄÖ¸Áîºó¾ÍÖ´ÐÐ¶ÔÓ¦µÄ²Ù×÷
+   6          //Â¼È¡µÄÖ¸ÎÆ±£´æÔÚÖ¸ÎÆÊ¶±ðÄ£¿é±¾ÉíÖÐ
+   7          
+   8          //ËùÒÔÕâ¸öÎÄ¼þµÄº¯ÊýÄã¿ÉÒÔ²»ÐèÒª¿´¶®£¬¹Ø¼üÊÇÒªÖªµÀÖ¸ÎÆÊ¶±ðÄ£¿éÊÇÈçºÎºÍµ¥Æ¬»úÍ¨ÐÅµÄ
+   9          
+  10          //µ¥Æ¬»úºÍÖ¸ÎÆÄ£¿éÍ¨¹ý´®¿ÚµÄ·½Ê½Í¨ÐÅ£¬µ¥Æ¬»ú¸ù¾ÝÖ¸ÎÆÄ£¿éµÄËµÃ÷ÊéÀïÃæµÄÐ­Òé£¬ÕâÐ©Ð­ÒéÊÇ³§¼Ò¹Ì¶¨µÄ£¬Ã»°ì·¨¸Ä
+             -±äµÄ
+  11          //µ¥Æ¬»úÖ»ÐèÒª°´ÕÕÄÇÐ©¹Ì¶¨µÄÐ­Òé£¬Í¨¹ý´®¿Ú°ÑÐ­Òé·¢ËÍ¸øÖ¸ÎÆÄ£¿é¾ÍÐÐÁË
+  12          //Ö¸ÎÆÄ£¿éÊÕµ½Ð­Òéºó£¬¾Í»á·ÖÎö¾ßÌåÊÇ¶ÔÓ¦ÄÄ¸öÐ­ÒéµÄ£¬ÊÇÂ¼È¡Ö¸ÎÆÄØ»¹ÊÇÉ¾³ýÖ¸ÎÆÄØ£¿
+  13          //È»ºóÖ´ÐÐ¶ÔÓ¦µÄÖ¸Áî£¬ÊµÏÖ¶ÔÖ¸ÎÆµÄ²Ù×÷
+  14          
+  15          #include "config.h"
+  16          
+  17          xdata uchar QBUFF[20]={0};       //È±ÇÚ
+  18          uchar CBUFF[20]={0};     //³Ùµ½
+  19          #define MAX_NUMBER    63 
+  20          
+  21          #define FALSE 0
+  22          #define TURE  1
+  23          
+  24          unsigned char TxBuf[20]={0};
+  25          unsigned char RxBuf[20]={0};
+  26          
+  27          unsigned int    clk0=0;
+  28          unsigned int    SearchNumber=0;
+  29          unsigned char   SaveNumber=0,ERRORCOUNT=0;
+  30          
+  31          unsigned char            FifoNumber=0; 
+  32          unsigned char idata  FIFO[MAX_NUMBER+1]={0};
+  33          
+  34          //Verify  Password   £ºÑéÖ¤Éè±¸ÎÕÊÖ¿ÚÁî
+  35          unsigned char code VPWD[16]={16,0X01 ,0Xff,0xff,0xff,0xff, 0x01,0,7,0x13,0x00,0x00,0x00,0x00,0x00,0x1b};         
+             -//»ØËÍ12¸ö
+  36          //GetImage           £ºÌ½²âÊÖÖ¸²¢´Ó´«¸ÐÆ÷ÉÏ¶ÁÈëÍ¼Ïñ
+  37          unsigned char code GIMG[14]={12, 0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,3,1,0x00,0x05};     //»ØËÍ12¸ö
+  38          //Gen Templet1        £º¸ù¾ÝÔ­Ê¼Í¼ÏñÉú³ÉÖ¸ÎÆÌØÕ÷1
+  39          unsigned char code GENT1[14]={13,0X01 ,0Xff,0xff,0xff,0xff,0x01,0,4,2,1,0x00,0x08};     //»ØËÍ12¸ö
+  40          //Gen Templet2        £º¸ù¾ÝÔ­Ê¼Í¼ÏñÉú³ÉÖ¸ÎÆÌØÕ÷2
+  41          unsigned char code GENT2[14]={13,0X01 ,0Xff,0xff,0xff,0xff,0x01,0,4,2,2,0x00,0x09}; //»ØËÍ12¸ö          
+  42          //Search Finger      £ºÒÔCharBufferA»òCharBufferBÖÐµÄÌØÕ÷ÎÄ¼þËÑË÷Õû¸ö»ò²¿·ÖÖ¸ÎÆ¿â
+  43          unsigned char code SEAT[18]={17,  0X01 ,0Xff,0xff,0xff,0xff, 0x01,   0,8, 4,1,0,0,    1,0xF4,  0x01,0x03};
+             -        //»ØËÍ16¸ö
+  44          //Merge Templet      ;½«CharBufferAÓëCharBufferBÖÐµÄÌØÕ÷ÎÄ¼þºÏ²¢Éú³ÉÄ£°å£¬½á¹û´æÓÚModelBuffer¡£
+  45          unsigned char code MERG[14]={12,  0X01 ,0Xff,0xff,0xff,0xff, 0x01,  0,3,5 , 0x00,0x09};//»ØËÍ12¸ö       
+  46          //Store Templet      £º½«ModelBufferÖÐµÄÎÄ¼þ´¢´æµ½flashÖ¸ÎÆ¿âÖÐ
+  47          unsigned char code STOR[16]={15,  0X01 ,0Xff,0xff,0xff,0xff, 0x01,  0,6,6,2,     0x00,0x00,     0x00,0x0f}
+             -; //»ØËÍ12¸ö
+  48          //Clear Note
+  49          unsigned char code DENT[46]={45,0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,36,0x18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+             -,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x00,0x3d};
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 2   
+
+  50          //DEL one templet
+  51          unsigned char code DELE_one[16]={16, 0X01 ,0Xff,0xff,0xff,0xff, 0x01,   0,7,  0x0c,    0x00,0x00, 0,1, 0x0
+             -0,0x15};
+  52          //DEL templet      ;Çå¿ÕÖ¸ÎÆ¿â
+  53          unsigned char code DELE_all[12]={12,0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,3,  0x0d,0x00,0x11};
+  54          //»ñÈ¡Ä£¿éÓÐÐ§Ä£°å×ÜÊý
+  55          unsigned char code ALLMODENUM[12]={12,0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,3,  0x1D,0x00,0x21};
+  56          //´ÓFlash¶ÁÈ¡Ò»¸öÄ£°åµ½»º³åÇø
+  57          //unsigned char code LOADCHAR[12]={15,0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,6,0x07,0x01,0,0,0,0x0f};
+  58          //´ÓFlash¶ÁÈ¡Ò»¸öÄ£°åµ½»º³åÇø
+  59          unsigned char code LOADCHARxxxx[13]={13,0X01 ,0Xff,0xff,0xff,0xff, 0x01, 0,4,0x1f,0,0,0x24};
+  60          
+  61          /********************************************************************
+  62          * Ãû³Æ : 
+  63          * ¹¦ÄÜ : 
+  64          * ÊäÈë : ÎÞ
+  65          * Êä³ö : ÎÞ
+  66          ***********************************************************************/
+  67          void UART_Init()
+  68          {
+  69   1              SCON  = 0x50;                   // SCON: Ä£Ê½ 1, 8-bit UART, Ê¹ÄÜ½ÓÊÕ  
+  70   1              TMOD |= 0x20;               // TMOD: timer 1, mode 2, 8-bit ÖØ×°        
+  71   1              PCON = 0X80;
+  72   1              TH1 = 0XFF;// TH1:  ÖØ×°Öµ 57600 ²¨ÌØÂÊ ¾§Õñ 11.0592MHz 
+  73   1              TL1 = TH1;
+  74   1          TR1 = 1;                  // TR1:  timer 1 ´ò¿ª   
+  75   1      }
+  76          /********************************************************************
+  77          * Ãû³Æ : 
+  78          * ¹¦ÄÜ : 
+  79          * ÊäÈë : 
+  80          * Êä³ö : 
+  81          ***********************************************************************/
+  82          void TIMER0_Init()
+  83          {
+  84   1              TMOD |= 0x01;   //¶¨Ê±Æ÷0 ·½Ê½1 16Î»
+  85   1          TL0=0x97;  //17msµÄ³õÖµ
+  86   1              TH0=0xBD;
+  87   1          ET0=1;      //¿ª¶¨Ê±Æ÷0ÖÐ¶Ï
+  88   1              TR0=1;   //Æô¶¯¼ÆÊ±     
+  89   1      }
+  90          void Fdelay1ms(unsigned int t)
+  91          {
+  92   1              unsigned int i,j;
+  93   1              for(i=0;i<t;i++)
+  94   1                 for(j=0;j<120;j++)
+  95   1                 ;
+  96   1      }
+  97          void TxdByte(unsigned char dat)//´®¿Ú·¢ËÍÐÅÏ¢,Í¨¹ý²éÑ¯·½Ê½·¢ËÍÒ»¸ö×Ö·û
+  98          {
+  99   1          TI = 0;              //ÈÃTI£½0
+ 100   1          SBUF = dat;  //¶ÁÈëÊý¾Ý
+ 101   1          while(!TI);  //µÈ´ý·¢ËÍÍê±Ï
+ 102   1          TI = 0;              //ÇåÁã
+ 103   1      }
+ 104          /********************************************************************
+ 105          * Ãû³Æ : 
+ 106          * ¹¦ÄÜ : 
+ 107          * ÊäÈë : 
+ 108          * Êä³ö : 
+ 109          ***********************************************************************/
+ 110          void Timer0_Isr() interrupt 1  //50ºÁÃë¶¨Ê±Æ÷t0ÖÐ¶ÏÈë¿Ú
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 3   
+
+ 111          {       
+ 112   1          TL0=0x97;
+ 113   1              TH0=0xBD;
+ 114   1              clk0++;   //ÑÓÊ±17ms
+ 115   1      }
+ 116          bit Command(unsigned char *p,unsigned char MaxTime) //ÃüÁî½âÎö,¸øÄ£¿é·¢ËÍÒ»¸öÃüÁî
+ 117          {
+ 118   1              unsigned char count=0,tmpdat=0,temp=0,i=0,package=0,flag=0,checksum=0;
+ 119   1                      
+ 120   1              bit result=0, start=0,stop=0;
+ 121   1      
+ 122   1              TxdByte(0xef);//Êý¾Ý°ü°üÍ·Ê¶±ðÂë
+ 123   1              TxdByte(0x01);//Êý¾Ý°ü°üÍ·Ê¶±ðÂë
+ 124   1              i=*p;         //Êý×éµÄµÚ¡°0¡±¸öÔªËØ¡¢ÀïÃæ´æ·ÅÁË±¾Êý×éµÄ³¤¶È£¬°ÑÕâ¸ö³¤¶È¸ø±äÁ¿i£¬·½±ã½øÐÐ²Ù×÷
+ 125   1              p++; 
+ 126   1              p++;
+ 127   1              for (count=i-1; count!=1;count--)  //Sent command String
+ 128   1                      {
+ 129   2                              temp=*p++;//È¡µÚ¸ö¡°1¡±¸öÔªËØµÄÄÚÈÝ£¬È»ºó·¢ËÍ 
+ 130   2                      TxdByte(temp);//½«Êý¾Ý·¢ËÍ³öÈ¥
+ 131   2                      }  
+ 132   1              result=TURE;//·¢ËÍÍê³É,½á¹ûÎªÕæ (ÕæÎª1)         
+ 133   1              FifoNumber=0;
+ 134   1              for (count=MAX_NUMBER+1; count!=0; count--)//Çå¿ÕËùÓÐFIFO[]Êý×éÀïÃæµÄÄÚÈÝ£¬Ð´Èë0X00
+ 135   1                       FIFO[count-1]=0x00;  
+ 136   1              
+ 137   1              if (result)   
+ 138   1              {               
+ 139   2              result=FALSE;
+ 140   2              start =FALSE;
+ 141   2                      stop  =FALSE;
+ 142   2              count=0;
+ 143   2              clk0=0; //ÇåÁãCL0¼ÆÊý
+ 144   2                      
+ 145   2              do /////////////////////////////doµÄÄÚÈÝ////////////////////////////////
+ 146   2                      {       
+ 147   3                              restart0:                               
+ 148   3                              if (RI==1)//Èç¹û½ÓÊÕµ½Êý¾Ý
+ 149   3                              {                               
+ 150   4                                              tmpdat=SBUF;//ÏÈ°Ñ½ÓÊÕµ½µÄÊý¾Ý·Åµ½tmpdatÖÐ
+ 151   4                              RI=0;
+ 152   4                              if ((tmpdat==0xef)&&(start==FALSE))//Õâ¸öÊý¾ÝÎªµÚÒ»¸ö´«»ØÀ´µÄÊý¾Ý£¬Ò²¾ÍÊÇ¡°Ö¸ÁîÓ¦´ð¡±µÄµÚÒ»¸
+             -ö×Ö½Ú
+ 153   4                                      { 
+ 154   5                                                              count=0;
+ 155   5                                                      FIFO[0]=tmpdat;//¶ÁÈëµÚÒ»¸öÓ¦´ð×Ö½Ú(0XEF)£¬´æÔÚµÚ¡°0¡±¸öÔªËØÖÐ    
+ 156   5                                                              flag=1; 
+ 157   5                                                              goto 
+ 158   5                                                                      restart0;//¿ÉÒÔÓÃÖÐ¶Ï·½Ê½½øÐÐ                   
+ 159   5                                                      
+ 160   5                                      }
+ 161   4                                              if(flag==1)//µÚÒ»¸ö×Ö½ÚÒÑ¾­»ØÀ´£¬ËùÒÔflag==1³ÉÁ¢
+ 162   4                                                      {  
+ 163   5                                                              if(tmpdat!=0x01)  //½ÓÊÕÊý¾Ý´íÎó£¬½«ÖØÐÂ´Ó»º³åÇø½ÓÊÕÊý¾Ý
+ 164   5                                                              {       
+ 165   6                                                                      flag=0;//½ÓÊÕÓ¦´ðÊ§°Ü
+ 166   6                                                                      result=FALSE;
+ 167   6                                                              start =FALSE;
+ 168   6                                                                      stop=FALSE;
+ 169   6                                                              count=0;
+ 170   6                                                                      goto 
+ 171   6                                                                              restart0;                                       
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 4   
+
+ 172   6                                                              
+ 173   6                                                              }
+ 174   5                                                              //Èç¹û³É¹¦½ÓÊÕµ½0xef01£¬¿ÉÒÔ¿ªÊ¼½ÓÊÕÊý¾Ý
+ 175   5                                                              flag=2;//flag=2;±íÊ¾Ó¦´ð³É¹¦£¬¿ÉÒÔ¿ªÊ¼½ÓÊÕÊý¾ÝÁË
+ 176   5                                                              count++;//ÏÖÔÚcount=1;
+ 177   5                                                              FIFO[count]=tmpdat;//¶ÁÈëµÚ¶þ¸öÓ¦´ð×Ö½Ú£¨0X01£©£¬´æÔÚµÚ¡°1¡±¸öÔªËØÖÐ    
+ 178   5                                                              start=TURE;     //Ó¦´ð³É¹¦¿ÉÒÔ¿ªÊ¼½ÓÊÕÊý¾Ý
+ 179   5                                                                  goto 
+ 180   5                                                                              restart0;       
+ 181   5                                                      }                  
+ 182   4                              if((flag==2)&&(start==TURE))//flag=2;±íÊ¾Ó¦´ð³É¹¦£¬¿ÉÒÔ¿ªÊ¼½ÓÊÕÊý¾ÝÁË
+ 183   4                                      {                                                        
+ 184   5                                                              count++; //Êý¾ÝÔªËØÏÂ±ê++
+ 185   5                                                  FIFO[count]=tmpdat;//´æÈëÊý¾Ý
+ 186   5                                                              if(count>=6)
+ 187   5                                                                      {
+ 188   6                                                                              checksum=FIFO[count]+checksum; //¼ÆËãÐ£ÑéºÍ
+ 189   6                                                                      }
+ 190   5                                                              if(count==8)
+ 191   5                                                                      { 
+ 192   6                                                                              package=FIFO[7]*0X100+FIFO[8];  //¼ÆËã°ü³¤¶È                                                    
+ 193   6                                                                              stop= TURE;
+ 194   6                                                                      }
+ 195   5                                                              if(stop)
+ 196   5                                                                      {                                               
+ 197   6                                                                              if(count==package+8)
+ 198   6                                                                              {
+ 199   7                                                                                      checksum=checksum-FIFO[count-1];
+ 200   7                                                                                      if(checksum!=FIFO[count]&0xff) 
+ 201   7                                                                                              result=FALSE; //Ð£ÑéÊ§°Ü,ÖÃ½á¹û±êÖ¾Îª0                                                  
+ 202   7                                                                                      else 
+ 203   7                                                                                              result=TURE;
+ 204   7                                                                                      flag=0;
+ 205   7                                                                                      break;
+ 206   7                                                                              } 
+ 207   6                                                                      }
+ 208   5                                      }
+ 209   4                              }
+ 210   3                }/////////////////////////////doµÄÄÚÈÝ----------------½áÊø////////////////////////////////
+ 211   2                         
+ 212   2                      while ((clk0<=MaxTime)&&(count<=MAX_NUMBER)); //ÓÉ¶¨Ê±Æ÷ÒÔ¼°×î´ó½ÓÊÕÊý¾ÝÀ´¿ØÖÆ£¬±£Ö¤²»»áÔÚ´ËÒ»Ö±Ñ­»·
+ 213   2                        
+ 214   2              FifoNumber=count;       //±£´æ½ÓÊÕµ½µÄÊý¾Ý¸öÊý
+ 215   2               }
+ 216   1         return (result);
+ 217   1      }
+ 218          
+ 219          bit VefPSW(void)//ÑéÖ¤Éè±¸ÎÕÊÖ¿ÚÁî,³É¹¦·µ»Ø1     
+ 220          {
+ 221   1              unsigned char  count=0;
+ 222   1              return(1);
+ 223   1              while(1)
+ 224   1              {
+ 225   2              if(Command(VPWD,20) && (FifoNumber==11) && (FIFO[9]==0x00))  
+ 226   2                              return(1);
+ 227   2              count++;
+ 228   2                      if (count>=2)//Èç¹û²»³É¹¦£¬ÔÙÑéÖ¤Ò»´Î£¬Èç¹ûÁ½´Î²»³É¹¦£¬·µ»ØÊ§°Ü
+ 229   2                      {       
+ 230   3                          return(0);   
+ 231   3                           }
+ 232   2              }
+ 233   1      }
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 5   
+
+ 234          bit Searchfinger(void)//ËÑË÷Ö¸ÎÆ(·¢ËÍËÑË÷ÃüÁî¡¢ÒÔ¼°¸ù¾Ý·µ»ØÖµÈ·¶¨ÊÇ·ñ´æÔÚ)        
+ 235          {               
+ 236   1              if(Command(SEAT,60) && (FifoNumber==15) && (FIFO[9]==0x00) )  
+ 237   1          {
+ 238   2                      SearchNumber=FIFO[10]*0x100+FIFO[11];//ËÑË÷µ½µÄÒ³Âë
+ 239   2                      return 1;
+ 240   2              }     
+ 241   1          else             
+ 242   1          {
+ 243   2              return 0;
+ 244   2          }  
+ 245   1      }
+ 246          unsigned char ImgProcess(unsigned char BUFID)  //·¢»ñÈ¡Í¼Ïñ²¢Éú³ÉÌØÕ÷ÎÄ¼þ£¬´æÈëBUFIDÖÐ//ÊäÈë²ÎÊýÎª»º³åÇøºÅ
+             -  
+ 247          {       
+ 248   1          if(Command(GIMG,89) && (FifoNumber==11) && (FIFO[9]==0x00))  
+ 249   1          {
+ 250   2                      if(BUFID==1)      
+ 251   2                      {                               
+ 252   3                      if(Command(GENT1,60) && (FifoNumber==11) && (FIFO[9]==0x00))  
+ 253   3                      {                                                       
+ 254   4                                      return 3;
+ 255   4                              }  
+ 256   3                      else
+ 257   3                      {
+ 258   4                                      return 2;
+ 259   4                      }
+ 260   3                       }
+ 261   2                      else if(BUFID==2)
+ 262   2                      {
+ 263   3                              if(Command(GENT2,60) && (FifoNumber==11) && (FIFO[9]==0x00))  
+ 264   3                      {                               
+ 265   4                                      return 3;
+ 266   4                              }  
+ 267   3                      else
+ 268   3                      {
+ 269   4                                      return 2;
+ 270   4                      }                       
+ 271   3                      }
+ 272   2          }
+ 273   1          else
+ 274   1          {
+ 275   2            return 1;       
+ 276   2          }          
+ 277   1              return 1;   
+ 278   1      }
+ 279          
+ 280          
+ 281          unsigned char search(void)//ËÑË÷ÓÃ»§ 
+ 282          {
+ 283   1              unsigned char SearchBuf=0;
+ 284   1              uchar i=0;
+ 285   1      
+ 286   1              while(1)
+ 287   1          {
+ 288   2              if (ImgProcess(1)==3)//Ê×ÏÈ¶ÁÈëÒ»´ÎÖ¸ÎÆ  
+ 289   2              {
+ 290   3                      SearchBuf=Searchfinger();//½øÐÐÖ¸ÎÆ±È¶Ô£¬Èç¹ûËÑË÷µ½£¬·µ»ØËÑË÷µ½µÄÖ¸ÎÆÐòºÅ
+ 291   3                      if(SearchBuf==1)
+ 292   3                      {
+ 293   4                              return SearchNumber; 
+ 294   4                      }
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 6   
+
+ 295   3                      else 
+ 296   3                              {
+ 297   4                                      i++;
+ 298   4                                      if(i>1) return 0;               
+ 299   4                              }          
+ 300   3              }
+ 301   2                      else //ÎÞÖ¸ÎÆ°´ÏÂ
+ 302   2                      {
+ 303   3                              
+ 304   3                      }
+ 305   2                      if(Input_pw()==CANCLE) //Ç©µ½ÏÂ °´A È¡Ïû
+ 306   2                      {
+ 307   3                              mode = 1;
+ 308   3                              return 0;       
+ 309   3                      }
+ 310   2          }
+ 311   1         return 0;
+ 312   1      }
+ 313          unsigned char enroll(void) //²É¼¯Á½´ÎÖ¸ÎÆ£¬Éú³É1¸ö Ö¸ÎÆÄ£°å
+ 314          {
+ 315   1              unsigned char temp=0,count=0,kk=0;
+ 316   1              while(1)
+ 317   1              {
+ 318   2                      temp=ImgProcess(1); //Éú³ÉÌØÕ÷1    
+ 319   2                      if (temp==3)//Éú³ÉÌØÕ÷ÎÄ¼þ³É¹¦             
+ 320   2              {                     
+ 321   3                      break;
+ 322   3              }
+ 323   2              else                   
+ 324   2              {
+ 325   3              }
+ 326   2              }
+ 327   1              //²É¼¯µÚÒ»¸öÌØÕ÷³É¹¦ 
+ 328   1              count=0; 
+ 329   1        
+ 330   1              //¿ªÊ¼²É¼¯µÚ¶þ¸öÌØÕ÷ 
+ 331   1              while(1)
+ 332   1              {
+ 333   2                      temp=ImgProcess(2); //Éú³ÉÌØÕ÷2    
+ 334   2                      if (temp==3)//Éú³ÉÌØÕ÷ÎÄ¼þ2³É¹¦
+ 335   2              {
+ 336   3                      if (  (Command(MERG,40)&& (FifoNumber==11) && (FIFO[9]==0x00))==0  ) //ºÏ²¢²»³É¹¦·µ»Ø0£¬³É¹¦·µ»Ø1
+ 337   3                              {
+ 338   4                                      kk++;
+ 339   4                                      if(enroll())return 1;
+*** WARNING C265 IN LINE 339 OF Ô´Âë\FINGER.C: 'enroll': recursive call to non-reentrant function
+ 340   4                                      if(kk > 2)return(0);
+ 341   4                              }
+ 342   3                              else//ÌØÕ÷ÎÄ¼þºÏ²¢Éú³ÉÄ£°å£¬½á¹û´æÓÚModelBuffer
+ 343   3                              {
+ 344   4                           return 1;
+ 345   4                              }       
+ 346   3              }
+ 347   2              else      
+ 348   2              {       
+ 349   3      
+ 350   3              }
+ 351   2              }
+ 352   1      }
+ 353          bit savefingure(unsigned char ID)//±£´æÖ¸ÎÆ
+ 354          {
+ 355   1               unsigned char i=0;
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 7   
+
+ 356   1               //ÏÖÔÚ¿ªÊ¼½øÐÐ´æ´¢Ö¸ÎÆÄ£°åµÄ²Ù×÷
+ 357   1           for (i=0;i<16;i++) //±£´æÖ¸ÎÆÐÅÏ¢
+ 358   1                      {
+ 359   2                              FIFO[i]=STOR[i];
+ 360   2                      }  
+ 361   1           FIFO[12]=ID; //°ÑÖ¸ÎÆÄ£°å´æ·ÅµÄPAGE_IDÒ²¾ÍÊÇFLASHµÄÎ»ÖÃ
+ 362   1           FIFO[14]=FIFO[14]+ID;      //Ð£ÑéºÍ
+ 363   1           if (Command(FIFO,70)==1)//²»³É¹¦·µ»Ø0      //´Ë´¦½øÐÐ´æ·ÅÖ¸ÎÆÄ£°åµÄÃü
+ 364   1                      {return(1);}
+ 365   1           else
+ 366   1                      {return(0);} //²»³É¹¦·µ»Ø0
+ 367   1      }
+ 368          
+ 369          bit Clear_All(void) //Çå¿ÕËùÓÐÖ¸ÎÆÐÅÏ¢£¬ 
+ 370          {
+ 371   1              if(VefPSW()!=1)//ÑéÖ¤Ê§°Ü
+ 372   1              {                       
+ 373   2               return 0;      
+ 374   2              }
+ 375   1              else              //ÑéÖ¤³É¹¦
+ 376   1              {                        
+ 377   2                      Command(DELE_all,50); //Çå¿ÕÖ¸ÎÆ¿â
+ 378   2                      Command(DENT,20);         //Çå¿ÕÓÃ»§¼ÇÊÂ±¾
+ 379   2                      while(!x24c02ISendByte(FINGERADDR,0));
+ 380   2                      ClrScreen12864();
+ 381   2                      Lcd12864_PutString(1,2,"Çå¿Õ³É¹¦");
+ 382   2                      Fdelay1ms(1500);
+ 383   2                      return 1;
+ 384   2              }
+ 385   1      }
+ 386          
+ 387          bit lurumode()   //Â¼È¡Ö¸ÎÆ
+ 388          {
+ 389   1              uchar ret = 0;
+ 390   1      
+ 391   1              if(VefPSW()==1)//ÓëÄ£¿éÎÕÊÖÍ¨¹ý
+ 392   1              {
+ 393   2                      if(enroll()==1)//²É¼¯Á½´Î£¬Éú³É1¸öÖ¸ÎÆÄ£°å³É¹¦
+ 394   2                      {
+ 395   3                              while(!x24c02IRcvByte(FINGERADDR,&SaveNumber));                                                 
+ 396   3                              if(savefingure(SaveNumber+1)==1)//±£´æÒ²³É¹¦
+ 397   3                              {
+ 398   4                                      SaveNumber++;
+ 399   4                                      while(!x24c02ISendByte(FINGERADDR,SaveNumber));
+ 400   4      
+ 401   4                                      while(!x24c02ISendStr((SaveNumber-1)*8,xuehaobuff,XUEHAOLEN));  //Ð´Ñ§ºÅµ½Flash
+ 402   4                                      ClrScreen12864();
+ 403   4      
+ 404   4                                      Lcd12864_PutString(1,2,"Ìí¼Ó³É¹¦");
+ 405   4                                      Fdelay1ms(1000);
+ 406   4                                      ClrScreen12864();
+ 407   4                                      return 1;;                              
+ 408   4                              }
+ 409   3                      }
+ 410   2                      else
+ 411   2                      {       
+ 412   3                              ClrScreen12864();
+ 413   3                              Lcd12864_PutString(1,2,"Ìí¼ÓÊ§°Ü");
+ 414   3                              Fdelay1ms(1000);
+ 415   3                              ClrScreen12864();
+ 416   3                              return 0;
+ 417   3                      }
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 8   
+
+ 418   2              }
+ 419   1              else
+ 420   1              {
+ 421   2                      
+ 422   2              }
+ 423   1              return ret;
+ 424   1      }
+ 425          bit shibiemode() //Ê¶±ðÖ¸ÎÆ
+ 426          {
+ 427   1              uchar i,usercount;
+ 428   1              uint searchnum=0;
+ 429   1              bit ret=0;
+ 430   1      
+ 431   1              searchnum=search();
+ 432   1              
+ 433   1              if(searchnum>=1)//ÓÐ¼ÇÂ¼
+ 434   1              {
+ 435   2                      if(mode == 2)//mode=2±íÊ¾ÔÚÂ¼È¡Ö¸ÎÆÖÐ
+ 436   2                      {
+ 437   3                              mode = 0;
+ 438   3                              ClrScreen12864();
+ 439   3                              Lcd12864_PutString(2,1,"¸ÃÖ¸ÎÆÒÑ´æÔÚ");
+ 440   3                              Fdelay1ms(1000);
+ 441   3                              ClrScreen12864();
+ 442   3                              return 0;
+ 443   3                      }
+ 444   2                      else
+ 445   2                      {
+ 446   3                              if(shangke == 1)         //¿ªÊ¼ÉÏ¿ÎÖ®ºó£¬Èç¹ûÇ©µ½¾Í±»·ÖÅäµ½³Ùµ½ÁÐ±í
+ 447   3                              {
+ 448   4                                      usercount=CBUFF[searchnum-1];
+ 449   4                                      if(usercount == 1) 
+ 450   4                                      {
+ 451   5                                              usercount=0;
+ 452   5                                              CBUFF[searchnum-1]=usercount;
+ 453   5                                              usercount=1;
+ 454   5                                              QBUFF[searchnum-1]=usercount;
+ 455   5                                      }
+ 456   4                                      else
+ 457   4                                      {
+ 458   5                                              ClrScreen12864();
+ 459   5                                              while(!x24c02IRcvStr((searchnum-1)*XUEHAOLEN,xuehaobuff,XUEHAOLEN));
+ 460   5                                              Lcd12864_PutString(1,0,"Ñ§ºÅ: ");
+ 461   5                                              Lcd12864_PutString(1,3,"");
+ 462   5                                              for(i=0;i<XUEHAOLEN;i++) v_Lcd12864SendData_f(xuehaobuff[i]+'0');
+ 463   5                                              Lcd12864_PutString(2,1,"ÒÑ¾­Ç©µ½³É¹¦");
+ 464   5                                              Fdelay1ms(1500);
+ 465   5                                              ClrScreen12864();
+ 466   5                                              return 0;
+ 467   5                                      }
+ 468   4                                      //»ñÈ¡¶ÔÓ¦µÄÑ§ºÅ
+ 469   4                                      while(!x24c02IRcvStr((searchnum-1)*XUEHAOLEN,xuehaobuff,XUEHAOLEN));
+ 470   4                                      Lcd12864_PutString(0,2,"ÄãÒÑ³Ùµ½");
+ 471   4                                      Lcd12864_PutString(3,3,"");
+ 472   4                                      for(i=0;i<XUEHAOLEN;i++) v_Lcd12864SendData_f(xuehaobuff[i]+'0');                       
+ 473   4                                      Fdelay1ms(1500);
+ 474   4                              }
+ 475   3                              else //»¹Ã»ÓÐ¿ªÊ¼ÉÏ¿Î
+ 476   3                              {
+ 477   4                                      //Ã¿¸öÇ©µ½µÄÖ¸ÎÆÐ´ÈëÇ©µ½´ÎÊý
+ 478   4                                  usercount=QBUFF[searchnum-1];
+ 479   4                                      if(usercount == 0)      //¸ÃÖ¸ÎÆ»¹Ã»ÓÐÇ©µ½¹ý£¬
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 9   
+
+ 480   4                                      {
+ 481   5                                              usercount=1;
+ 482   5                                              QBUFF[searchnum-1]=usercount;
+ 483   5                                              usercount=2;
+ 484   5                                              CBUFF[searchnum-1]=usercount;
+ 485   5                                      }
+ 486   4                                      else  //¸ÃÖ¸ÎÆÒÑ¾­Ç©µ½¹ýÁË ÌáÊ¾ËµÒÑ¾­Ç©µ½³É¹¦ÁË
+ 487   4                                      {
+ 488   5                                              ClrScreen12864();
+ 489   5                                              while(!x24c02IRcvStr((searchnum-1)*XUEHAOLEN,xuehaobuff,XUEHAOLEN));
+ 490   5                                              Lcd12864_PutString(1,0,"Ñ§ºÅ: ");
+ 491   5                                              Lcd12864_PutString(1,3,"");
+ 492   5                                              for(i=0;i<XUEHAOLEN;i++) v_Lcd12864SendData_f(xuehaobuff[i]+'0');
+ 493   5                                              Lcd12864_PutString(2,1,"ÒÑ¾­Ç©µ½³É¹¦");
+ 494   5                                              Fdelay1ms(1500);
+ 495   5                                              ClrScreen12864();
+ 496   5                                              return 0;
+ 497   5                                      }
+ 498   4              
+ 499   4                                      //»ñÈ¡¶ÔÓ¦µÄÑ§ºÅ
+ 500   4                                      while(!x24c02IRcvStr((searchnum-1)*XUEHAOLEN,xuehaobuff,XUEHAOLEN));
+ 501   4                                      Lcd12864_PutString(0,2,"Ç©µ½³É¹¦");
+ 502   4                                      Lcd12864_PutString(3,3,"");
+ 503   4                                      for(i=0;i<XUEHAOLEN;i++) v_Lcd12864SendData_f(xuehaobuff[i]+'0');                       
+ 504   4                                      Fdelay1ms(1500);
+ 505   4                              }                       
+ 506   3                      }
+ 507   2              }
+ 508   1              else
+ 509   1              {
+ 510   2                      if(mode == 1)//°´A È¡Ïû   mode=1±íÊ¾ÔÚÇ©µ½ÖÐ
+ 511   2                      {
+ 512   3                              mode = 0;
+ 513   3                              return 0;
+ 514   3                      }
+ 515   2                      else if(mode == 2)//Â¼ÈëÇ°Ê¶±ðÊÇ·ñ´æÔÚ mode=2±íÊ¾ÔÚÂ¼È¡Ö¸ÎÆÖÐ
+ 516   2                      {
+ 517   3                              mode = 0;
+ 518   3                              return 1;
+ 519   3                      }
+ 520   2                      else
+ 521   2                      {
+ 522   3                              LEDRED = LEDON;
+ 523   3                              BEEP = BEEPON;
+ 524   3                              ClrScreen12864();               
+ 525   3                              Lcd12864_PutString(1,2,"Ê¶±ðÊ§°Ü");     
+ 526   3                              Fdelay1ms(1000);
+ 527   3                              ClrScreen12864();
+ 528   3                              LEDRED = LEDOFF;
+ 529   3                              BEEP = BEEPOFF;
+ 530   3                      }
+ 531   2              }
+ 532   1              return ret;
+ 533   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1813    ----
+   CONSTANT SIZE    =    293    ----
+   XDATA SIZE       =     87      19
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+C51 COMPILER V9.00   FINGER                                                                07/02/2016 00:02:59 PAGE 10  
+
+   IDATA SIZE       =     64    ----
+   BIT SIZE         =   ----       4
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,176 @@
+C51 COMPILER V9.00   LCD12864_2                                                            07/09/2016 21:46:21 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD12864_2
+OBJECT MODULE PLACED IN .\obj\LCD12864_2.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeildeC51\C51\BIN\C51.EXE 源码\LCD12864_2.c LARGE BROWSE DEBUG OBJECTEXTEND 
+                    -PRINT(.\list\LCD12864_2.lst) OBJECT(.\obj\LCD12864_2.obj)
+
+line level    source
+
+   1          
+   2          
+   3          //这个文件是液晶LCD12864的驱动函数，采用的是串行接法
+   4          //这个文件的函数大家都是可以通用的，就是液晶的驱动函数。
+   5          //所以你可以不必看懂这个文件的函数，当然如果你想自己看懂的话，你可能得借助百度了，
+   6          
+   7          
+   8          #include "config.h"     
+   9          
+  10          
+  11          sbit SID=P2^4;//rw              //数据信号
+  12          sbit SCLK=P2^5;//en             //时钟信号
+  13          
+  14          
+  15          /********************************************************************
+  16          * 名称 : delay()
+  17          * 功能 : 延时,延时时间为 100us * t。这是通过软件延时，有一定误差。
+  18          * 输入 : t
+  19          * 输出 : 无
+  20          ***********************************************************************/
+  21          void delay(unsigned int t)
+  22          {
+  23   1              unsigned int i,j;
+  24   1              for(i=0; i<t;  i++)
+  25   1          for(j=0; j<3; j++);
+  26   1      }
+  27          /********************************************************************
+  28          * 名称 : sendbyte()
+  29          * 功能 : 按照液晶的串口通信协议，发送数据
+  30          * 输入 : zdata
+  31          * 输出 : 无
+  32          ***********************************************************************/
+  33          void Lsendbyte(unsigned char zdata)
+  34          {
+  35   1              unsigned int i;
+  36   1              for(i=0; i<8; i++)
+  37   1              {
+  38   2                      if((zdata << i) & 0x80)
+  39   2                      {
+  40   3                              SID = 1;
+  41   3                      }
+  42   2                      else 
+  43   2                      {
+  44   3                              SID = 0;
+  45   3                      }
+  46   2                      SCLK = 0;
+  47   2                      SCLK = 1;
+  48   2              }
+  49   1      }
+  50          /********************************************************************
+  51          * 名称 : write_com()
+  52          * 功能 : 写串口指令
+  53          * 输入 : cmdcode
+  54          * 输出 : 无
+C51 COMPILER V9.00   LCD12864_2                                                            07/09/2016 21:46:21 PAGE 2   
+
+  55          ***********************************************************************/
+  56          void v_Lcd12864SendCmd_f(unsigned char cmdcode)
+  57          {
+  58   1              Lsendbyte(0xf8);
+  59   1              Lsendbyte(cmdcode & 0xf0);
+  60   1              Lsendbyte((cmdcode << 4) & 0xf0);
+  61   1              delay(2);
+  62   1      }
+  63          /********************************************************************
+  64          * 名称 : write_data()
+  65          * 功能 : 写串口指令
+  66          * 输入 : cmdcode
+  67          * 输出 : 无
+  68          ***********************************************************************/
+  69          void v_Lcd12864SendData_f(unsigned char Dispdata)
+  70          {
+  71   1              Lsendbyte(0xfa);
+  72   1              Lsendbyte(Dispdata & 0xf0);
+  73   1              Lsendbyte((Dispdata << 4) & 0xf0);
+  74   1              delay(2);
+  75   1      }
+  76          /********************************************************************
+  77          * 名称 : lcdinit()
+  78          * 功能 : 初始化函数
+  79          * 输入 : cmdcode
+  80          * 输出 : 无
+  81          ***********************************************************************/
+  82          void Lcd12864_Init()
+  83          {  
+  84   1              delay(2000);
+  85   1              v_Lcd12864SendCmd_f(0x30);
+  86   1              delay(50);
+  87   1              v_Lcd12864SendCmd_f(0x0c);
+  88   1              delay(50);
+  89   1      }
+  90          /********************************************************************
+  91          * 名称 : 
+  92          * 功能 : 
+  93          * 输入 : 无
+  94          * 输出 : 无
+  95          ***********************************************************************/
+  96          void v_Lcd12864SetAddress_f( unsigned char x, y )  //地址转换
+  97          {
+  98   1          unsigned char byAddress ;
+  99   1          switch( x )
+ 100   1          {
+ 101   2              case 0 :    byAddress = 0x80 + y ;
+ 102   2                  break;
+ 103   2              case 1 :    byAddress = 0x90 + y ;
+ 104   2                  break ;
+ 105   2              case 2 :    byAddress = 0x88 + y ;
+ 106   2                  break ;
+ 107   2              case 3 :    byAddress = 0x98 + y ;
+ 108   2                  break ;
+ 109   2              default :
+ 110   2                  break ;
+ 111   2          }
+ 112   1          v_Lcd12864SendCmd_f( byAddress ) ;
+ 113   1      }
+ 114          /*******************************************************
+ 115          y为距离最左边位置
+ 116          x为第几行
+C51 COMPILER V9.00   LCD12864_2                                                            07/09/2016 21:46:21 PAGE 3   
+
+ 117          ******************************************************/
+ 118          //void Lcd12864_PutChar( unsigned char x, unsigned char y, unsigned char pData )
+ 119          //{
+ 120          //    v_Lcd12864SetAddress_f( x, y ) ;
+ 121          //    {
+ 122          //        v_Lcd12864SendData_f( pData ) ;
+ 123          //    }
+ 124          //}
+ 125          /*******************************************************
+ 126          y为距离最左边位置
+ 127          x为第几行
+ 128          ******************************************************/
+ 129          void Lcd12864_PutString( unsigned char x, unsigned char y, unsigned char *pData )
+ 130          {
+ 131   1          v_Lcd12864SetAddress_f( x, y ) ;
+ 132   1          while( *pData != '\0' )
+ 133   1          {
+ 134   2              v_Lcd12864SendData_f( *pData++ ) ;
+ 135   2                      delay(30);
+ 136   2          }
+ 137   1      }
+ 138          /********************************************************************
+ 139          * 名称 : ClrScreen12864()
+ 140          * 功能 : 
+ 141          * 输入 : 
+ 142          * 输出 : 
+ 143          ***********************************************************************/
+ 144          void ClrScreen12864()
+ 145          { 
+ 146   1         v_Lcd12864SendCmd_f(0x01);
+ 147   1         delay(15);
+ 148   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    264    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

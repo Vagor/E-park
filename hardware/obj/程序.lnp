@@ -1,0 +1,9 @@
+".\obj\STARTUP.obj",
+".\obj\main.obj",
+".\obj\KEY.obj",
+".\obj\24C02.obj",
+".\obj\RC522.obj",
+".\obj\CTRL.obj",
+".\obj\LCD12864.obj" 
+TO ".\obj\³ÌÐò" 
+PRINT(".\list\³ÌÐò.m51") RAMSIZE(256) 

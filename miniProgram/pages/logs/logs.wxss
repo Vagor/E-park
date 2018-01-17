@@ -1,0 +1,27 @@
+.log-list {
+  display: flex;
+  flex-direction: column;
+  padding: 40rpx;
+}
+.log-item {
+  margin: 10rpx;
+}
+.change{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 25px;
+}
+.ditu{
+  display: flex;
+  flex-direction: column;
+  margin-top:70px;
+  width: 700rpx;
+  height: 900rpx;
+  margin: 25rpx;
+
+}
+.anniu{
+  width: 500rpx;
+  margin-top: 20px;
+}

@@ -1,0 +1,327 @@
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\hex\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Ô´Âë\main.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\li
+                    -st\main.lst) TABS(2) OBJECT(.\hex\main.obj)
+
+line level    source
+
+   1          #include "config.h" //ÓÃ»§ÐèÒªÌí¼ÓµÄÍ·ÎÄ¼þ
+   2          #include <reg52.h>               //51?????????
+   3          #define uchar unsigned char     //?????????char??
+   4          #define uint unsigned int       //?????????int??
+   5          
+   6          
+   7          
+   8          xdata const INT8U KeyABuf[] = { 0x20, 0x12, 0x10, 0x01, 0x00, 0x00 };  //×¢²áÐ´ÈëµÄÃÜÂë
+   9          xdata const INT8U DefaultKeyABuf[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };  //¿¨Æ¬Ä¬ÈÏµÄAÃÜÂë Ò²¾ÍÊÇ×¢ÏúÊ
+             -±Ð´ÈëµÄÃÜÂë
+  10          xdata INT8U CardRevBuf[16] = { 0 }; //»º´æµÄÃÜÂë
+  11          xdata INT8U const CardKeyABlockBuf[16] = {
+  12                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  13                          0xff,0x07,0x80,0x69,
+  14                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  15                          };
+  16                            
+  17          xdata uchar QBUFF[20]={0};   //È±ÇÚ
+  18          uchar CBUFF[20]={0};   //³Ùµ½
+  19          
+  20          uchar SYS_STATUS,presystatus=0xff;
+  21          uchar xuehaobuff[XUEHAOLEN];
+  22          uchar quecount=0,maxcount=0,yecount=0,hang=0;
+  23          uchar shangke=0,chicount=0;
+  24          
+  25          
+  26          
+  27          /********************************************************************
+  28          * Ãû³Æ : 
+  29          * ¹¦ÄÜ : 
+  30          * ÊäÈë : ÎÞ
+  31          * Êä³ö : ÎÞ
+  32          ***********************************************************************/
+  33          void Fdelay1ms(unsigned int t)
+  34          {
+  35   1        unsigned int i,j;
+  36   1        for(i=0;i<t;i++)
+  37   1           for(j=0;j<120;j++)
+  38   1           ;
+  39   1      }
+  40          /********************************************************************
+  41          * Ãû³Æ : 
+  42          * ¹¦ÄÜ : 
+  43          * ÊäÈë : 
+  44          * Êä³ö : 
+  45          ***********************************************************************/
+  46          uchar board_process( void )
+  47          {
+  48   1        if( PcdRequest( PICC_REQIDL, &CardRevBuf[0] ) != MI_OK )//Ñ°ÌìÏßÇøÄÚÎ´½øÈëÐÝÃß×´Ì¬µÄ¿¨£¬·µ»Ø¿¨Æ¬ÀàÐÍ 2×Ö½
+             -Ú  
+  49   1        {
+  50   2          if( PcdRequest( PICC_REQIDL, &CardRevBuf[0] ) != MI_OK )//Ñ°ÌìÏßÇøÄÚÎ´½øÈëÐÝÃß×´Ì¬µÄ¿¨£¬·µ»Ø¿¨Æ¬ÀàÐÍ 2×Ö
+             -½Ú  
+  51   2          {
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 2   
+
+  52   3            return NOCARD;
+  53   3          } 
+  54   2        }
+  55   1      
+  56   1        if( PcdAnticoll( &CardRevBuf[2] ) != MI_OK ) //·À³å×²£¬·µ»Ø¿¨µÄÐòÁÐºÅ 4×Ö½Ú 
+  57   1        {
+  58   2          return NOCARD;  
+  59   2        }
+  60   1      
+  61   1        if( PcdSelect( &CardRevBuf[2] ) != MI_OK )//Ñ¡¿¨
+  62   1        {
+  63   2          return NOCARD;
+  64   2        }
+  65   1      
+  66   1        if( PcdAuthState( PICC_AUTHENT1A, CARDPASSWARD_ADDR, KeyABuf, &CardRevBuf[2] ) != MI_OK )// ÑéÖ¤ÃÜÂë    
+  67   1        {
+  68   2          return NOREG;  //Î´×¢²á
+  69   2        }
+  70   1        else   
+  71   1        {
+  72   2          return HAVEREG;  //ÒÑ×¢²á
+  73   2        }
+  74   1      }
+  75          /********************************************************************
+  76          * Ãû³Æ : 
+  77          * ¹¦ÄÜ : 
+  78          * ÊäÈë : ÎÞ
+  79          * Êä³ö : ÎÞ
+  80          ***********************************************************************/
+  81          INT8U * getcardid( INT8U * SrcBuf)  //½«¿¨ºÅ×ª»»³É×Ö·û´®
+  82          {
+  83   1        char DisplayBuf[10];
+  84   1        char *pDisplayChar;
+  85   1        INT8U Tmp, i;
+  86   1      
+  87   1        pDisplayChar = DisplayBuf;
+  88   1      
+  89   1        for( i = 0; i < 4; i++ )
+  90   1        {
+  91   2          Tmp = ( ( *SrcBuf ) >> 4 ) & 0x0F;  
+  92   2          if( ( Tmp >=0 ) && ( Tmp <= 9 ) )
+  93   2          {
+  94   3            *pDisplayChar ++ = '0' + Tmp; 
+  95   3          }
+  96   2          else
+  97   2          {
+  98   3            *pDisplayChar ++ = 'A' + Tmp - 10;
+  99   3          }
+ 100   2      
+ 101   2          Tmp = ( *SrcBuf ) & 0x0F; 
+ 102   2          if( ( Tmp >=0 ) && ( Tmp <= 9 ) )
+ 103   2          {
+ 104   3            *pDisplayChar ++ = '0' + Tmp; 
+ 105   3          }
+ 106   2          else
+ 107   2          {
+ 108   3            *pDisplayChar ++ = 'A' + Tmp - 10;
+ 109   3          }
+ 110   2      
+ 111   2          SrcBuf ++;
+ 112   2        }
+ 113   1        *pDisplayChar ++ = '\0';
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 3   
+
+ 114   1      
+ 115   1        return DisplayBuf;
+ 116   1        
+ 117   1      }
+ 118          INT32U  getnum(uchar block)
+ 119          {
+ 120   1        INT32U cardnum;
+ 121   1        uchar CardReadBuf[16];
+ 122   1      
+ 123   1        if( PcdRead( block, CardReadBuf ) != MI_OK )// ¶ÁÊý¾Ý
+ 124   1        {
+ 125   2          
+ 126   2        }
+ 127   1        memcpy( ( uchar * )&cardnum, CardReadBuf, 4 ); 
+ 128   1        
+ 129   1        return cardnum;   
+ 130   1      }
+ 131          uchar WriteCardNum()
+ 132          {
+ 133   1        uchar icstatus;
+ 134   1        uchar SaveNumber;
+ 135   1        uchar CardWriteBuf[16];
+ 136   1        INT32U CardNUM=0;
+ 137   1        INT8U *buff;
+ 138   1      
+ 139   1        memset( CardWriteBuf, 0, 16 );
+ 140   1      
+ 141   1        while(!x24c02IRcvByte(CARDNUMADDR,&SaveNumber));
+ 142   1        
+ 143   1        icstatus = board_process(); //»ñÈ¡¿¨µÄ×´Ì¬
+ 144   1      
+ 145   1        if(icstatus == HAVEREG) //ÒÑ×¢²áµÄ¿¨Æ¬
+ 146   1        {       
+ 147   2          SaveNumber++;
+ 148   2          while(!x24c02ISendByte(CARDNUMADDR,SaveNumber));
+ 149   2            
+ 150   2          CardNUM = SaveNumber;
+ 151   2          memcpy( CardWriteBuf, ( INT8U * )&CardNUM, 4 ); 
+ 152   2          if( PcdWrite( CARDNUMBER_ADDR, CardWriteBuf ) != MI_OK )// Ð´Êý¾Ý
+ 153   2          {
+ 154   3            return 0; 
+ 155   3          }       
+ 156   2          buff = getcardid(&CardRevBuf[2]);
+ 157   2          memcpy(xuehaobuff,buff,XUEHAOLEN);
+ 158   2          while(!x24c02ISendStr((SaveNumber-1)*XUEHAOLEN,xuehaobuff,XUEHAOLEN));  //Ð´¿¨ºÅµ½Flash
+ 159   2          return 1;   
+ 160   2        }
+ 161   1        return 0;
+ 162   1      }
+ 163          
+ 164          
+ 165          void sendString(uchar *s)
+ 166          {
+ 167   1        while(*s != '\0') //???????'\0',???????????
+ 168   1        {
+ 169   2          SBUF = *s;
+ 170   2          while(!TI);
+ 171   2          TI=0;
+ 172   2          s++;
+ 173   2        }
+ 174   1      }
+ 175          
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 4   
+
+ 176          //Ê¹µ¥Æ¬»úÒÔ115200µÄ²¨ÌØÂÊÍ¨ÐÅ
+ 177          void init_com_115200( void ) //??115200???
+ 178          { 
+ 179   1          SCON=0x50; //??????1,8?UART,?????  
+ 180   1          TH2=0xFF;           
+ 181   1          TL2=0xFD;   //???:115200 ??=11.0592MHz 
+ 182   1          RCAP2H=0xFF;   
+ 183   1          RCAP2L=0xFD; //16??????? 
+ 184   1          TCLK=1;   
+ 185   1          RCLK=1;   
+ 186   1          C_T2=0;   
+ 187   1          EXEN2=0; //??????????
+ 188   1      
+ 189   1          TR2=1 ; //???2??
+ 190   1          Fdelay1ms(2000);
+ 191   1          sendString("AT+RST\r\n");
+ 192   1          Fdelay1ms(10000);
+ 193   1          sendString("AT+CIPSTART=\"TCP\",\"192.168.137.167\",4001\r\n");
+ 194   1        
+ 195   1      } 
+ 196          
+ 197          void main(void)
+ 198          {
+ 199   1                    uchar str[20];
+ 200   1        uchar num;
+ 201   1        uchar icstatus;
+ 202   1        INT32U readiiccardnum;
+ 203   1        uchar usercount;
+ 204   1      
+ 205   1        LEDRED = LEDOFF;
+ 206   1        LEDGREEN = LEDON;
+ 207   1        BEEP = BEEPOFF;
+ 208   1      
+ 209   1        Lcd12864_Init();  //Òº¾§³õÊ¼»¯
+ 210   1        ClrScreen12864(); //ÇåÆÁ
+ 211   1      
+ 212   1        SYS_STATUS = SYSNORMAL;
+ 213   1      
+ 214   1        memset(CBUFF,1,20); //void *memset(void *s,int c,size_t n)½«ÒÑ¿ª±ÙÄÚ´æ¿Õ¼ä s µÄÊ× n ¸ö×Ö½ÚµÄÖµÉèÎªÖµ c¡£
+ 215   1                            //CBUFFÊý×éÀïÃæµÄÔªËØÖµÄ¬ÈÏÎª1£¬±íÊ¾·Ç³Ùµ½
+ 216   1      
+ 217   1        init_rc522(); //Ë¢¿¨Ä£¿é³õÊ¼»¯
+ 218   1        init_com_115200(); //Ê¹µ¥Æ¬»úÒÔ115200µÄ²¨ÌØÂÊÍ¨ÐÅ
+ 219   1      
+ 220   1        while(!x24c02IRcvByte(FIRSTADDR,&usercount));
+ 221   1        if(usercount == 9)
+ 222   1        {
+ 223   2          while(!x24c02IRcvStr(QBUFFADDR,QBUFF,8));
+ 224   2          while(!x24c02IRcvStr(240,&QBUFF[8],8));   
+ 225   2        }
+ 226   1        else 
+ 227   1        {
+ 228   2          while(!x24c02ISendStr(QBUFFADDR,QBUFF,8)); 
+ 229   2          while(!x24c02ISendStr(240,&QBUFF[8],8));     
+ 230   2        }
+ 231   1        while(1)
+ 232   1          {
+ 233   2            ClrScreen12864();
+ 234   2            Lcd12864_PutString( 1, 2, "³µÎ»ºÅA01");
+ 235   2            icstatus = board_process(); //»ñÈ¡¿¨µÄ×´Ì¬
+ 236   2            switch(icstatus)
+ 237   2              {
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 5   
+
+ 238   3              case NOREG:
+ 239   3              Fdelay1ms(500);
+ 240   3              if(updata_key(0)==1) 
+ 241   3                {
+ 242   4                  Lcd12864_PutString( 2, 1, "  Í£³µ³É¹¦  ");
+ 243   4                  Lcd12864_PutString(3, 2, getcardid(&CardRevBuf[2]) ); //ÏÔÊ¾¿¨ºÅ
+ 244   4                  sendString("AT+CIPSEND=8\r\n");
+ 245   4                  Fdelay1ms(3000);
+ 246   4                  sendString(getcardid(&CardRevBuf[2]));
+ 247   4                  Fdelay1ms(300);
+ 248   4                  LEDRED = LEDON;
+ 249   4                  LEDGREEN = LEDOFF;
+ 250   4                  BEEP = BEEPOFF; 
+ 251   4                }
+ 252   3                Fdelay1ms(3000);
+ 253   3                break;
+ 254   3              
+ 255   3              case HAVEREG:
+ 256   3              while(!x24c02IRcvByte(CARDNUMADDR,&num)); //»ñÈ¡×¢²áµÄ¿¨ÊýÁ¿ Ò²¾ÍÊÇ×ÜÈËÊý
+ 257   3              hang=0;
+ 258   3              icstatus = board_process();     
+ 259   3              Fdelay1ms(500);
+ 260   3              if(updata_key(1)==1)
+ 261   3                {
+ 262   4                  LEDRED = LEDOFF;
+ 263   4                  LEDGREEN = LEDON;
+ 264   4                  BEEP = BEEPOFF;   
+ 265   4                  Lcd12864_PutString( 2, 1, "  Àë¿ª³É¹¦  ");  
+ 266   4                  Lcd12864_PutString(3, 2, getcardid(&CardRevBuf[2]) ); //ÏÔÊ¾¿¨ºÅ
+ 267   4                  sendString("AT+CIPSEND=8\r\n");
+ 268   4                  Fdelay1ms(3000);
+ 269   4                  sendString(getcardid(&CardRevBuf[2]));
+ 270   4                  Fdelay1ms(300);
+ 271   4                  readiiccardnum = getnum(CARDNUMBER_ADDR); //»ñÈ¡¸Ã¿¨¶ÔÓ¦µÄÊýÖµ£¬µÚÒ»ÕÅ¿¨¾ÍÊÇ1£¬µÚ¶þÕÅ¿¨¾ÍÊÇ2£¬ÒÔ´ËÀà
+             -ÍÆ
+ 272   4                  while(!x24c02ISendByte(FIRSTADDR,9));
+ 273   4                  QBUFF[readiiccardnum-1] = 1;
+ 274   4                  while(!x24c02ISendByte(QBUFFADDR+readiiccardnum-1,1));
+ 275   4                  if(readiiccardnum >= 8)
+ 276   4                    {
+ 277   5                      //while(!x24c02IRcvStr(240,&QBUFF[8],8));
+ 278   5                      }
+ 279   4                    else
+ 280   4                      {           
+ 281   5                  //while(!x24c02IRcvStr(QBUFFADDR,QBUFF,8));
+ 282   5                        }
+ 283   4                }
+ 284   3                Fdelay1ms(3000);
+ 285   3                break;
+ 286   3              }
+ 287   2          }
+ 288   1      }
+*** WARNING C280 IN LINE 199 OF Ô´Âë\main.c: 'str': unreferenced local variable
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1006    ----
+   CONSTANT SIZE    =    103    ----
+   XDATA SIZE       =    100      84
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.54   MAIN                                                                  01/15/2018 17:52:47 PAGE 6   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

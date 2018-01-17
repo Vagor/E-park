@@ -1,0 +1,8 @@
+".\hex\STARTUP.obj",
+".\hex\main.obj",
+".\hex\24C02.obj",
+".\hex\RC522.obj",
+".\hex\CTRL.obj",
+".\hex\LCD12864.obj" 
+TO ".\hex\³ÌÐò" 
+PRINT(".\list\³ÌÐò.m51") RAMSIZE(256) 

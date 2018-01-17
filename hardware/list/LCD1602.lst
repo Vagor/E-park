@@ -1,0 +1,154 @@
+C51 COMPILER V9.00   LCD1602                                                               10/14/2015 14:52:11 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD1602
+OBJECT MODULE PLACED IN .\obj\LCD1602.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeilC51\C51\BIN\C51.EXE 源码\LCD1602.c BROWSE DEBUG OBJECTEXTEND PRINT(.\lis
+                    -t\LCD1602.lst) OBJECT(.\obj\LCD1602.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          
+   4          //必须根据硬件改
+   5          sbit LCD1602_EN=P1^2;           //1602使能引脚
+   6          sbit LCD1602_RW=P1^1;           //1602读写引脚  
+   7          sbit LCD1602_RS=P1^0;           //1602数据/命令选择引脚
+   8          
+   9          //必须根据硬件改
+  10          //sbit LCD1602_EN=P2^6;         //1602使能引脚
+  11          //sbit LCD1602_RW=P2^5;         //1602读写引脚  
+  12          //sbit LCD1602_RS=P2^4;         //1602数据/命令选择引脚
+  13          
+  14          #define RS_CLR LCD1602_RS=0 
+  15          #define RS_SET LCD1602_RS=1
+  16          
+  17          #define RW_CLR LCD1602_RW=0 
+  18          #define RW_SET LCD1602_RW=1 
+  19          
+  20          #define EN_CLR LCD1602_EN=0
+  21          #define EN_SET LCD1602_EN=1
+  22          
+  23          #define DataPort   P0    //1602数据端口  
+  24          
+  25          uchar LCD1602_CLR = 1;
+  26          
+  27          void LCDDelayMs(uint i)//1ms延时
+  28          {
+  29   1              uint x,j;
+  30   1              for(j=0;j<i;j++)
+  31   1              for(x=0;x<=30;x++);     
+  32   1      }
+  33          /********************************************************************
+  34          * 名称 : wcmd(uchar del)
+  35          * 功能 : 1602命令函数
+  36          * 输入 : 输入的命令值
+  37          * 输出 : 无
+  38          ***********************************************************************/
+  39          void LCD_Write_Com(uchar com)
+  40          {
+  41   1      LCDDelayMs(1);
+  42   1       RS_CLR; 
+  43   1       RW_CLR; 
+  44   1       EN_SET; 
+  45   1       DataPort= com; 
+  46   1       _nop_(); 
+  47   1       EN_CLR;
+  48   1      }
+  49          /********************************************************************
+  50          * 名称 : wdata(uchar del)
+  51          * 功能 : 1602写数据函数
+  52          * 输入 : 需要写入1602的数据
+  53          * 输出 : 无
+  54          ***********************************************************************/
+C51 COMPILER V9.00   LCD1602                                                               10/14/2015 14:52:11 PAGE 2   
+
+  55          static void LCD_Write_Data(uchar Data)
+  56          {
+  57   1               LCDDelayMs(1);
+  58   1       RS_SET; 
+  59   1       RW_CLR; 
+  60   1       EN_SET; 
+  61   1       DataPort= Data; 
+  62   1       _nop_();
+  63   1       EN_CLR;
+  64   1      }
+  65          void LCD1602_Init()                             //初始化1602
+  66          {
+  67   1              LCD_Write_Com(0x38);    /*显示模式设置*/ 
+  68   1         LCDDelayMs(5); 
+  69   1         LCD_Write_Com(0x38); 
+  70   1         LCDDelayMs(5); 
+  71   1         LCD_Write_Com(0x38); 
+  72   1         LCDDelayMs(5); 
+  73   1         LCD_Write_Com(0x38);  
+  74   1         LCD_Write_Com(0x08);    /*显示关闭*/ 
+  75   1         LCD_Write_Com(0x01);    /*显示清屏*/ 
+  76   1         LCD_Write_Com(0x06);    /*显示光标移动设置*/ 
+  77   1         LCDDelayMs(5); 
+  78   1         LCD_Write_Com(0x0C);    /*显示开及光标设置*/
+  79   1      }
+  80          //void LCD1602_Clear()
+  81          //{
+  82          //      LCD_Write_Com(0x01); 
+  83          //      LCDDelayMs(5);    //清屏
+  84          //}
+  85          /********************************************************************
+  86          * 名称 : L1602_char(uchar hang,uchar lie,char sign)
+  87          * 功能 : 改变液晶中某位的值，如果要让第一行，第五个字符显示"b" ，调用该函数如下
+  88                           L1602_char(1,5,'b')
+  89          * 输入 : 行，列，需要输入1602的数据
+  90          * 输出 : 无
+  91          ***********************************************************************/
+  92          void LCD1602_Char(uchar x,uchar y,char sign)
+  93          {
+  94   1              if (x == 1) 
+  95   1                      {     
+  96   2                      LCD_Write_Com(0x80 + y);     
+  97   2                      }    
+  98   1               else 
+  99   1                      {     
+ 100   2                      LCD_Write_Com(0xC0 + y);     
+ 101   2                      }        
+ 102   1               LCD_Write_Data( sign);  
+ 103   1      }
+ 104          /********************************************************************
+ 105          * 名称 : L1602_string(uchar hang,uchar lie,uchar *p)
+ 106          * 功能 : 改变液晶中某位的值，如果要让第一行，第五个字符开始显示"ab cd ef" ，调用该函数如下
+ 107                           L1602_string(1,5,"ab cd ef;")
+ 108          * 输入 : 行，列，需要输入1602的数据
+ 109          * 输出 : 无
+ 110          ***********************************************************************/
+ 111          void LCD1602_String(uchar x,uchar y,uchar *s)
+ 112          {
+ 113   1               if (x == 1) 
+ 114   1              {     
+ 115   2               LCD_Write_Com(0x80 + y);     //表示第一行
+ 116   2              }
+C51 COMPILER V9.00   LCD1602                                                               10/14/2015 14:52:11 PAGE 3   
+
+ 117   1       else 
+ 118   1              {      
+ 119   2              LCD_Write_Com(0xC0 + y);      //表示第二行
+ 120   2              }        
+ 121   1       while (*s) 
+ 122   1              {     
+ 123   2       LCD_Write_Data( *s);     
+ 124   2       s ++;     
+ 125   2              }
+ 126   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    193    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

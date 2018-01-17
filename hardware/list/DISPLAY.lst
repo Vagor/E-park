@@ -1,0 +1,64 @@
+C51 COMPILER V9.00   DISPLAY                                                               07/09/2016 13:57:35 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN .\obj\DISPLAY.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeildeC51\C51\BIN\C51.EXE 源码\DISPLAY.c LARGE BROWSE DEBUG OBJECTEXTEND PRI
+                    -NT(.\list\DISPLAY.lst) OBJECT(.\obj\DISPLAY.obj)
+
+line level    source
+
+   1          
+   2          
+   3          /************************************************
+   4          这是具体的显示函数，就是在液晶显示出具体的内容，可以考虑在这里显示。
+   5          例如将获取到的卡号转换成字符串，这样就可以直接在液晶显示出来
+   6          ************************************************/
+   7          
+   8          
+   9          #include "config.h"
+  10          
+  11          /********************************************************************
+  12          * 名称 : 
+  13          * 功能 : 
+  14          * 输入 : 无
+  15          * 输出 : 无
+  16          ***********************************************************************/
+  17          void display_no_reg( uchar *idbuf )     //有卡 未注册
+  18          {
+  19   1      //      Lcd12864_PutString( 1, 3, getcardid(idbuf) );
+  20   1      }
+*** WARNING C280 IN LINE 17 OF 源码\DISPLAY.C: 'idbuf': unreferenced local variable
+  21          /********************************************************************
+  22          * 名称 : 
+  23          * 功能 : 
+  24          * 输入 : 无
+  25          * 输出 : 无
+  26          ***********************************************************************/
+  27          void display_reg( uchar *idbuf )        //有卡 已注册
+  28          {
+  29   1      //      Lcd12864_PutString( 0, 0, "状态：已注册" ); 
+  30   1      //      Lcd12864_PutString( 1, 0, "卡号：" );
+  31   1      //      Lcd12864_PutString( 1, 3, getcardid(idbuf) );
+  32   1      //      Lcd12864_PutString( 2, 2, "刷卡成功" ); 
+  33   1      }
+*** WARNING C280 IN LINE 27 OF 源码\DISPLAY.C: 'idbuf': unreferenced local variable
+  34          
+  35          
+  36          
+  37          
+  38          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     24    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

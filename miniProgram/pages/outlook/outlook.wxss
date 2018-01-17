@@ -1,0 +1,28 @@
+/* pages/outlook/outlook.wxss */
+.change{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 80px;
+}
+.money{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  width: 500rpx;
+  height: 100rpx;
+}
+.time{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 110px;
+}
+.pay{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 500rpx;
+  height: 100rpx;
+}

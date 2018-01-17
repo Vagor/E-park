@@ -1,0 +1,98 @@
+C51 COMPILER V9.54   CTRL                                                                  01/15/2018 17:52:47 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CTRL
+OBJECT MODULE PLACED IN .\hex\CTRL.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Ô´Âë\CTRL.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\li
+                    -st\CTRL.lst) TABS(2) OBJECT(.\hex\CTRL.obj)
+
+line level    source
+
+   1          
+   2          /************************************************
+   3          Õâ¸öÎÄ¼þµÄº¯Êý¾ÍÊÇ×¢²áºÍ×¢ÏúµÄº¯Êý
+   4          µ±Ö´ÐÐ×¢Ïú»òÕß×¢²áµÄÊ±ºò£¬µ¥Æ¬»ú¾Í»áµ÷ÓÃÕâ¸öº¯Êý£¬´«²»Í¬µÄÖµÅÐ¶ÏÊÇ×¢²á»¹ÊÇ×¢Ïú¡£
+   5          µ±×¢²áµÄÊ±ºòµ¥Æ¬»ú¾Í½«µ±Ç°¿¨Æ¬µÄAÇøµÄÃÜÂë¸Ä³É0x20, 0x12, 0x10, 0x01, 0x00, 0x00£¬
+   6          µ±×¢ÏúµÄÊ±ºòµ¥Æ¬»ú¾Í½«µ±Ç°¿¨Æ¬µÄAÇøµÄÃÜÂë¸Ä³É0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF£¬
+   7          µ¥Æ¬»ú¾ÍÊÇÍ¨¹ý¶ÁÈ¡Õâ¸öAÇøµÄÃÜÂëÀ´ÅÐ¶Ï¿¨Æ¬ÊÇ×¢²á¹ýµÄ»¹ÊÇÃ»ÓÐ×¢²á¹ýµÄ¡£
+   8          ************************************************/
+   9          
+  10          #include "config.h"
+  11          
+  12          
+  13          extern const INT8U KeyABuf[];  //×¢²áÐ´ÈëµÄÃÜÂë
+  14          extern const INT8U DefaultKeyABuf[];
+  15          extern INT8U const CardKeyABlockBuf[16];
+  16          /********************************************************************
+  17          * Ãû³Æ : 
+  18          * ¹¦ÄÜ : 
+  19          * ÊäÈë : ÎÞ
+  20          * Êä³ö : ÎÞ
+  21          ***********************************************************************/
+  22          uchar updata_key(uchar res)  //¸ü¸Ä¿¨Æ¬ÃÜÂë
+  23          {
+  24   1        uchar CardKeyABuf[6]; //¶Áµ½µÄIDºÅ
+  25   1        uchar CardKeyABufNew[6];  //×¢ÏúÇ°IDºÅ
+  26   1        uchar CardKeyABufMatch[6]; //Ä¬ÈÏµÄIDºÅ
+  27   1      
+  28   1        if(res)  //×¢Ïú
+  29   1        {
+  30   2          memcpy( CardKeyABufNew, &DefaultKeyABuf[0], 6 );
+  31   2          memcpy( CardKeyABufMatch, &KeyABuf[0], 6 );
+  32   2        }
+  33   1        else  //×¢²á
+  34   1        {
+  35   2          memcpy( CardKeyABufNew, &KeyABuf[0], 6 );
+  36   2          memcpy( CardKeyABufMatch, &DefaultKeyABuf[0], 6 );
+  37   2        }
+  38   1        
+  39   1        if( PcdRequest( PICC_REQIDL, &CardKeyABuf[0] ) != MI_OK )//Ñ°ÌìÏßÇøÄÚÎ´½øÈëÐÝÃß×´Ì¬µÄ¿¨£¬·µ»Ø¿¨Æ¬ÀàÐÍ 2×Ö
+             -½Ú  
+  40   1        {  
+  41   2          if( PcdRequest( PICC_REQIDL, &CardKeyABuf[0] ) != MI_OK )
+  42   2          {
+  43   3            return FALSE;
+  44   3          }
+  45   2        }
+  46   1        if( PcdAnticoll( &CardKeyABuf[2] ) != MI_OK ) //·À³å×²£¬·µ»Ø¿¨µÄÐòÁÐºÅ 4×Ö½Ú 
+  47   1        {
+  48   2          return FALSE; 
+  49   2        }
+  50   1      
+  51   1        if( PcdSelect( &CardKeyABuf[2] ) != MI_OK )//Ñ¡¿¨
+  52   1        {
+  53   2          return FALSE;
+C51 COMPILER V9.54   CTRL                                                                  01/15/2018 17:52:47 PAGE 2   
+
+  54   2        }
+  55   1      
+  56   1        if( PcdAuthState( PICC_AUTHENT1A, CARDPASSWARD_ADDR, CardKeyABufMatch, &CardKeyABuf[2] ) != MI_OK )// ÑéÖ
+             -¤ÃÜÂë
+  57   1        {
+  58   2          return FALSE; 
+  59   2        }
+  60   1      
+  61   1        memcpy( CardKeyABlockBuf, &CardKeyABufNew[0], 6 );
+  62   1      
+  63   1        if( PcdWrite( CARDPASSWARD_ADDR, CardKeyABlockBuf ) != MI_OK )// Ð´¿¨
+  64   1        {
+  65   2          return FALSE;
+  66   2        }
+  67   1        return TRUE;
+  68   1      }
+  69          
+  70          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    199    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      18
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

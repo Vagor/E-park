@@ -1,0 +1,256 @@
+C51 COMPILER V9.00   DS1302                                                                09/01/2015 10:49:21 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE DS1302
+OBJECT MODULE PLACED IN .\obj\DS1302.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\KeilC51\C51\BIN\C51.EXE 源码\DS1302.c BROWSE DEBUG OBJECTEXTEND PRINT(.\list
+                    -\DS1302.lst) OBJECT(.\obj\DS1302.obj)
+
+line level    source
+
+   1          
+   2          #include "config.h"
+   3          
+   4          sbit SCK=P1^3;          
+   5          sbit SDA=P1^4;          
+   6          sbit RST=P1^5;
+   7          
+   8          //复位脚
+   9          #define RST_CLR RST=0//电平置低
+  10          #define RST_SET RST=1//电平置高
+  11          
+  12          
+  13          //双向数据
+  14          #define IO_CLR  SDA=0//电平置低
+  15          #define IO_SET  SDA=1//电平置高
+  16          #define IO_R    SDA  //电平读取
+  17          
+  18          
+  19          //时钟信号
+  20          #define SCK_CLR SCK=0//时钟信号
+  21          #define SCK_SET SCK=1//电平置高
+  22          
+  23          
+  24          #define ds1302_sec_add                  0x80            //秒数据地址
+  25          #define ds1302_min_add                  0x82            //分数据地址
+  26          #define ds1302_hr_add                   0x84            //时数据地址
+  27          #define ds1302_date_add                 0x86            //日数据地址
+  28          #define ds1302_month_add                0x88            //月数据地址
+  29          #define ds1302_day_add                  0x8a            //星期数据地址
+  30          #define ds1302_year_add                 0x8c            //年数据地址
+  31          #define ds1302_control_add              0x8e            //控制数据地址
+  32          #define ds1302_charger_add              0x90                                     
+  33          #define ds1302_clkburst_add             0xbe
+  34          
+  35          unsigned char SystemTimer[8] = {20,15,8,30,12,59,55,5};//空年月日时分秒周
+  36          unsigned char time_buf[8] ;                         //空年月日时分秒周
+  37          uchar AlarmclockTimerr[8]={20,10,6,5,13,0,55,5};
+  38          /*------------------------------------------------
+  39                     向DS1302写入一字节数据
+  40          ------------------------------------------------*/
+  41          void Ds1302_Write_Byte(unsigned char addr, unsigned char d)
+  42          {
+  43   1      
+  44   1              unsigned char i;
+  45   1              RST_SET;        
+  46   1              
+  47   1              //写入目标地址：addr
+  48   1              addr = addr & 0xFE;     //最低位置零
+  49   1              for (i = 0; i < 8; i ++) 
+  50   1                  { 
+  51   2                      if (addr & 0x01) 
+  52   2                          {
+  53   3                              IO_SET;
+  54   3                              }
+C51 COMPILER V9.00   DS1302                                                                09/01/2015 10:49:21 PAGE 2   
+
+  55   2                      else 
+  56   2                          {
+  57   3                              IO_CLR;
+  58   3                              }
+  59   2                      SCK_SET;
+  60   2                      SCK_CLR;
+  61   2                      addr = addr >> 1;
+  62   2                      }
+  63   1              
+  64   1              //写入数据：d
+  65   1              for (i = 0; i < 8; i ++) 
+  66   1                 {
+  67   2                      if (d & 0x01) 
+  68   2                          {
+  69   3                              IO_SET;
+  70   3                              }
+  71   2                      else 
+  72   2                          {
+  73   3                              IO_CLR;
+  74   3                              }
+  75   2                      SCK_SET;
+  76   2                      SCK_CLR;
+  77   2                      d = d >> 1;
+  78   2                      }
+  79   1              RST_CLR;                                        //停止DS1302总线
+  80   1      }
+  81          /*------------------------------------------------
+  82                     从DS1302读出一字节数据
+  83          ------------------------------------------------*/
+  84          
+  85          unsigned char Ds1302_Read_Byte(unsigned char addr) 
+  86          {
+  87   1      
+  88   1              unsigned char i;
+  89   1              unsigned char temp;
+  90   1              RST_SET;        
+  91   1      
+  92   1              //写入目标地址：addr
+  93   1              addr = addr | 0x01;//最低位置高
+  94   1              for (i = 0; i < 8; i ++) 
+  95   1                  {
+  96   2                   
+  97   2                      if (addr & 0x01) 
+  98   2                         {
+  99   3                              IO_SET;
+ 100   3                              }
+ 101   2                      else 
+ 102   2                          {
+ 103   3                              IO_CLR;
+ 104   3                              }
+ 105   2                      SCK_SET;
+ 106   2                      SCK_CLR;
+ 107   2                      addr = addr >> 1;
+ 108   2                      }
+ 109   1              
+ 110   1              //输出数据：temp
+ 111   1              for (i = 0; i < 8; i ++) 
+ 112   1                  {
+ 113   2                      temp = temp >> 1;
+ 114   2                      if (IO_R) 
+ 115   2                         {
+ 116   3                              temp |= 0x80;
+C51 COMPILER V9.00   DS1302                                                                09/01/2015 10:49:21 PAGE 3   
+
+ 117   3                              }
+ 118   2                      else 
+ 119   2                         {
+ 120   3                              temp &= 0x7F;
+ 121   3                              }
+ 122   2                      SCK_SET;
+ 123   2                      SCK_CLR;
+ 124   2                      }
+ 125   1              
+ 126   1              RST_CLR;        //停止DS1302总线
+ 127   1              return temp;
+ 128   1      }
+ 129          
+ 130          /*------------------------------------------------
+ 131                     向DS1302写入时钟数据
+ 132          ------------------------------------------------*/
+ 133          void DS1302_SetTimer(void) 
+ 134          {    
+ 135   1          unsigned char i,tmp;
+ 136   1      
+ 137   1              for(i=0;i<8;i++)
+ 138   1          {                  //BCD处理
+ 139   2                      tmp=SystemTimer[i]/10;
+ 140   2                      time_buf[i]=SystemTimer[i]%10;
+ 141   2                      time_buf[i]=time_buf[i]+tmp*16;
+ 142   2          }
+ 143   1      
+ 144   1              Ds1302_Write_Byte(ds1302_control_add,0x00);                     //关闭写保护 
+ 145   1              Ds1302_Write_Byte(ds1302_sec_add,0x80);                         //暂停 
+ 146   1              Ds1302_Write_Byte(ds1302_year_add,time_buf[YEAR]);              //年 
+ 147   1              Ds1302_Write_Byte(ds1302_month_add,time_buf[MONTH]);    //月 
+ 148   1              Ds1302_Write_Byte(ds1302_date_add,time_buf[DAY]);               //日 
+ 149   1              Ds1302_Write_Byte(ds1302_day_add,time_buf[WEEK]);               //周 
+ 150   1              Ds1302_Write_Byte(ds1302_hr_add,time_buf[HOUR]);                //时 
+ 151   1              Ds1302_Write_Byte(ds1302_min_add,time_buf[MUNITE]);             //分
+ 152   1              Ds1302_Write_Byte(ds1302_sec_add,time_buf[SECOND]);             //秒
+ 153   1              Ds1302_Write_Byte(ds1302_day_add,time_buf[WEEK]);               //周 
+ 154   1              Ds1302_Write_Byte(ds1302_control_add,0x80);                     //打开写保护 
+ 155   1      }
+ 156          
+ 157          /*------------------------------------------------
+ 158                     从DS1302读出时钟数据
+ 159          ------------------------------------------------*/
+ 160          void DS1302_GetTimer(void)  
+ 161          { 
+ 162   1              unsigned char i,tmp;
+ 163   1      
+ 164   1              time_buf[YEAR]=Ds1302_Read_Byte(ds1302_year_add);               //年 
+ 165   1              time_buf[MONTH]=Ds1302_Read_Byte(ds1302_month_add);             //月 
+ 166   1              time_buf[DAY]=Ds1302_Read_Byte(ds1302_date_add);                //日 
+ 167   1              time_buf[HOUR]=Ds1302_Read_Byte(ds1302_hr_add);         //时 
+ 168   1              time_buf[MUNITE]=Ds1302_Read_Byte(ds1302_min_add);              //分 
+ 169   1              time_buf[SECOND]=(Ds1302_Read_Byte(ds1302_sec_add))&0x7F;//秒 
+ 170   1              time_buf[WEEK]=Ds1302_Read_Byte(ds1302_day_add);                //周 
+ 171   1      
+ 172   1              for(i=0;i<8;i++)
+ 173   1              {           //BCD处理
+ 174   2                      tmp=time_buf[i]/16;
+ 175   2                      SystemTimer[i]=time_buf[i]%16;
+ 176   2                      SystemTimer[i]=SystemTimer[i]+tmp*10;
+ 177   2              }
+ 178   1      }
+C51 COMPILER V9.00   DS1302                                                                09/01/2015 10:49:21 PAGE 4   
+
+ 179          
+ 180          /*------------------------------------------------
+ 181                          DS1302初始化
+ 182          ------------------------------------------------*/
+ 183          void Ds1302_Init(void)
+ 184          {       
+ 185   1              RST_CLR;                        //RST脚置低
+ 186   1              SCK_CLR;                        //SCK脚置低
+ 187   1          Ds1302_Write_Byte(ds1302_sec_add,0x00);                              
+ 188   1      }
+ 189          
+ 190           /*************************************************** 
+ 191          将年月日转换为ascii码：XX-XX-XX 
+ 192          ***************************************************/  
+ 193          //void DS1302_DateToStr(unsigned char *DateString,uchar *Time)  
+ 194          //{  
+ 195          //    DateString[0] = Time[YEAR]/10 + '0';  
+ 196          //    DateString[1] = Time[YEAR]%10 + '0';  
+ 197          //    DateString[2] = '-';  
+ 198          //    DateString[3] = Time[MONTH]/10 + '0';  
+ 199          //    DateString[4] = Time[MONTH]%10 + '0';  
+ 200          //    DateString[5] = '-';  
+ 201          //    DateString[6] = Time[DAY]/10 + '0';  
+ 202          //    DateString[7] = Time[DAY]%10 + '0';  
+ 203          //    DateString[8] = '\0';  
+ 204          //}  
+ 205            
+ 206           /*************************************************** 
+ 207          将时间转换为ascii码：XX：XX：XX 
+ 208          ***************************************************/  
+ 209          //void DS1302_TimeToStr(unsigned char *TimeString,uchar *Time)  
+ 210          //{  
+ 211          //    TimeString[0] = Time->Hour/10 + '0';  
+ 212          //    TimeString[1] = Time->Hour%10 + '0';  
+ 213          //    TimeString[2] = ':';  
+ 214          //    TimeString[3] = Time->Minute/10 + '0';  
+ 215          //    TimeString[4] = Time->Minute%10 + '0';  
+ 216          //    TimeString[5] = ':';  
+ 217          //    TimeString[6] = Time->Second/10 + '0';  
+ 218          //    TimeString[7] = Time->Second%10 + '0';  
+ 219          //    TimeString[8] = '\0';    
+ 220          //}
+ 221          //void Alarmclock_Init()
+ 222          //{
+ 223          ////    AlarmclockTimerr[HOUR] = 22;
+ 224          ////    AlarmclockTimerr[MUNITE] = 11;
+ 225          ////    AlarmclockTimerr[SECOND] = 11;
+ 226          //}
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    328    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     24    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
